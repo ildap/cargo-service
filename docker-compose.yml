@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0
+    volumes:
+      - .:/app
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-cargo_user}:${DB_PASSWORD:-secret}@db:5432/${DB_NAME:-cargo_service}
+    depends_on:
+      - db
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=${DB_USER:-cargo_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
+      - POSTGRES_DB=${DB_NAME:-cargo_service}
+
+volumes:
+  postgres_data:
