@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+import datetime
 from sqlalchemy.orm import Session
 import logging
 
@@ -30,7 +30,7 @@ class CargoServiceInterface(ABC):
         pass
 
     @abstractmethod
-    def get_rate(self, date: datetime, type: str) -> float:
+    def get_rate(self, date: datetime.date, type: str) -> float:
         pass
 
 
@@ -95,7 +95,7 @@ class CargoService(CargoServiceInterface):
         self.db.delete(cargo_insurance)
         self.db.commit()
 
-    def get_rate(self, date: datetime, type: str) -> float:
+    def get_rate(self, date: datetime.date, type: str) -> float:
         cargo_insurance = self.db.query(CargoInsurance) \
             .filter(CargoInsurance.cargo_type == type) \
             .filter(CargoInsurance.date == date) \
@@ -139,4 +139,6 @@ class CargoLoggingService(CargoServiceInterface):
         self.logger.info(f"cargo-service.delete by id {id}")
 
     def get_rate(self, date: datetime, type: str) -> float:
-        return self.cargo_service.get_rate(date, type)
+        rate = self.cargo_service.get_rate(date, type)
+        self.logger.info(f"cargo-service.rate by date {str(date)} and type {type} is {rate}")
+        return rate
