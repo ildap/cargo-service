@@ -10,8 +10,10 @@ services:
       - 8000:8000
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-cargo_user}:${DB_PASSWORD:-secret}@db:5432/${DB_NAME:-cargo_service}
+      - BROKER_URL=kafka:9092
     depends_on:
       - db
+      - kafka
   db:
     image: postgres:15-alpine
     volumes:
@@ -22,6 +24,20 @@ services:
       - POSTGRES_USER=${DB_USER:-cargo_user}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
       - POSTGRES_DB=${DB_NAME:-cargo_service}
+
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
 
 volumes:
   postgres_data:
