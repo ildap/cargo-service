@@ -1,7 +1,8 @@
 services:
   app:
     build: .
-    command: uvicorn app.main:app --host 0.0.0.0
+    # command: uvicorn app.main:app --host 0.0.0.0
+    command: ["sh", "/app/prestart.sh", "uvicorn", "app.main:app", "--host", "0.0.0.0"]
     volumes:
       - .:/app
     expose:
@@ -38,6 +39,11 @@ services:
     image: bitnami/zookeeper:latest
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

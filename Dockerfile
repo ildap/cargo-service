@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED 1
 
 # install psycopg2
 RUN apt update \
-    && apt install -y gcc g++ python3-dev libpq-dev librdkafka-dev
+    && apt install -y gcc g++ python3-dev libpq-dev librdkafka-dev netcat-openbsd
 
 # install dependencies
 COPY requirements.txt .
