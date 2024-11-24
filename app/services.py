@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from sqlalchemy.orm import Session
+import logging
 
 from .schemas import Tariffs
 from .schemas import CargoInsurance as CargoInsuranceSchema
@@ -60,7 +61,6 @@ class CargoService(CargoServiceInterface):
                     existing_cargo = existing_map[key]
                     existing_cargo.rate = cargo.rate  # update rate
                     cargo_insurances.append(existing_cargo)
-                    print('existing append', existing_cargo)
                 else:
                     new_cargo = CargoInsurance(
                         cargo_type=cargo.cargo_type,
@@ -68,7 +68,6 @@ class CargoService(CargoServiceInterface):
                         date=date
                     )
                     cargo_insurances.append(new_cargo)
-                    print('new append', new_cargo)
         # multiple save/update
         self.db.bulk_save_objects(cargo_insurances)
         self.db.commit()
@@ -106,3 +105,38 @@ class CargoService(CargoServiceInterface):
             raise NotFoundException
 
         return cargo_insurance.rate
+
+
+class CargoLoggingService(CargoServiceInterface):
+    """Logging layer for CargoService"""
+
+    def __init__(self, cargo_service: CargoService):
+        self.cargo_service = cargo_service
+        self.logger = logging.getLogger()
+
+    def upload(self, tariffs: Tariffs):
+        self.cargo_service.upload(tariffs)
+        self.logger.info("cargo-service.upload", {'data': tariffs.json()})
+
+    def read(self, id: int) -> CargoInsurance:
+        try:
+            cargo_insurance = self.cargo_service.read(id)
+        except NotFoundException as e:
+            self.logger.info(f"cargo-service.read not found id {id}")
+            raise e
+        else:
+            self.logger.info(f"cargo-service.read by id {id}")
+
+        return cargo_insurance
+
+    def update(self, cargo_insurance_schema: CargoInsuranceSchema) -> CargoInsurance:
+        cargo_insurance = self.cargo_service.update(cargo_insurance_schema)
+        self.logger.info("cargo-service.update", {'data': cargo_insurance_schema.json()})
+        return cargo_insurance
+
+    def delete(self, id: int):
+        self.cargo_service.delete(id)
+        self.logger.info(f"cargo-service.delete by id {id}")
+
+    def get_rate(self, date: datetime, type: str) -> float:
+        return self.cargo_service.get_rate(date, type)

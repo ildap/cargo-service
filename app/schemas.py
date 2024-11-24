@@ -1,7 +1,7 @@
 from typing import List, Dict
 from datetime import date
 
-from pydantic import BaseModel, RootModel, root_validator
+from pydantic import BaseModel, RootModel
 
 
 class CargoInsuranceBase(BaseModel):
@@ -11,6 +11,7 @@ class CargoInsuranceBase(BaseModel):
 
 class CargoInsurance(CargoInsuranceBase):
     id: int
+    date: date
 
 
 class Tariffs(RootModel[Dict[date, List[CargoInsuranceBase]]]):
@@ -43,12 +44,3 @@ class Tariffs(RootModel[Dict[date, List[CargoInsuranceBase]]]):
             }
         })
         return schema
-
-    @root_validator(pre=True)
-    def validate_keys_are_dates(cls, values):
-        for key in values.keys():
-            try:
-                date.fromisoformat(key)
-            except ValueError:
-                raise ValueError(f"Key '{key}' is not a valid date in format 'yyyy-mm-dd'")
-        return values
