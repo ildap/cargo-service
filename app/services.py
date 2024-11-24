@@ -42,22 +42,25 @@ class CargoService(CargoServiceInterface):
         existing_cargos = (
             self.db.query(CargoInsurance)
             .filter(
-                CargoInsurance.date.in_(tariffs.data.keys())
+                CargoInsurance.date.in_(tariffs.root.keys())
             )
             .all()
         )
+
         existing_map = {
-            str(cargo.date) + cargo.cargo_type: cargo for cargo in existing_cargos
+            cargo.date.strftime('%Y-%m-%d') + cargo.cargo_type: cargo
+            for cargo in existing_cargos
         }
         # create data for save/update
         cargo_insurances = []
-        for date, cargos in tariffs.data.items():
+        for date, cargos in tariffs.root.items():
             for cargo in cargos:
-                key = str(date) + cargo.cargo_type
+                key = date.strftime('%Y-%m-%d') + cargo.cargo_type
                 if key in existing_map:
                     existing_cargo = existing_map[key]
                     existing_cargo.rate = cargo.rate  # update rate
                     cargo_insurances.append(existing_cargo)
+                    print('existing append', existing_cargo)
                 else:
                     new_cargo = CargoInsurance(
                         cargo_type=cargo.cargo_type,
@@ -65,6 +68,7 @@ class CargoService(CargoServiceInterface):
                         date=date
                     )
                     cargo_insurances.append(new_cargo)
+                    print('new append', new_cargo)
         # multiple save/update
         self.db.bulk_save_objects(cargo_insurances)
         self.db.commit()
@@ -102,4 +106,3 @@ class CargoService(CargoServiceInterface):
             raise NotFoundException
 
         return cargo_insurance.rate
-

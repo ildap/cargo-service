@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 
 from app.schemas import Tariffs
 from app.models import CargoInsurance
@@ -7,16 +8,16 @@ from app.services import NotFoundException
 
 def test_upload_update(cargo_service, db):
     initial_data = {
-        "2020-01-01": [
-            {"cargo_type": "Glass", "rate": 0.04},
-            {"cargo_type": "Other", "rate": 0.06}
+        datetime.strptime("2020-01-01", "%Y-%m-%d").date(): [
+            {"cargo_type": "Glass", "rate": 0.041},
+            {"cargo_type": "Other", "rate": 0.061}
         ],
-        "2020-02-01": [
-            {"cargo_type": "Glass", "rate": 0.05},
-            {"cargo_type": "Other", "rate": 0.062}
+        datetime.strptime("2020-02-01", "%Y-%m-%d").date(): [
+            {"cargo_type": "Glass", "rate": 0.051},
+            {"cargo_type": "Other", "rate": 0.0621}
         ]
     }
-    tariffs_initial = Tariffs(tariffs=initial_data)
+    tariffs_initial = Tariffs(root=initial_data)
     list_data = [
         {**cargo, 'date': date} for date, cargos in initial_data.items()
         for cargo in cargos
@@ -37,7 +38,7 @@ def test_upload_update(cargo_service, db):
 def test_read(cargo_service):
     exist = cargo_service.read(1)
 
-    assert exist is not None, f"Not found cargo_insurance"
+    assert exist is not None, "Not found cargo_insurance"
 
 
 def test_read_not_found(cargo_service):
